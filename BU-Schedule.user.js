@@ -20,7 +20,7 @@ var inline_src = (<><![CDATA[
 
     $(function(){
 		// add the export button
-        $(".pageheaderlinks").prepend('<a href="#" id="export_btn">Export to Calender</a>');
+         $(".pageheaderlinks").prepend('<a href="#" id="export_btn" class="submenulinktext2"> EXPORT TO CALENDAR </a> &nbsp;');
 		
 		/**
 		 *	This class is used to create events in the iCalendar spec
@@ -49,7 +49,7 @@ var inline_src = (<><![CDATA[
 				
 				time = time.trim();
 
-				let t = moment(time, ['h:mm A']).day(weekday);//.hour(Number(time.split(":")[0])).minute(Number(time.split(":")[1].split(" ")[0]));
+				let t = moment(time, ['h:mm A']).day(weekday);
 				return t.format("YYYYMMDD[T]HHmmss");
 			}
 
@@ -163,7 +163,7 @@ END:VCALENDAR\n`;
 			// prompt to download the file
 			let element = document.createElement('a');
 			element.setAttribute('href', 'data:text/calendar,' + encodeURIComponent(calendar));
-			element.setAttribute('download', 'test.ics');
+			element.setAttribute('download', 'class-schedule.ics');
 
 			element.style.display = 'none';
 			document.body.appendChild(element);
