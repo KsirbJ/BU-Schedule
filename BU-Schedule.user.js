@@ -20,8 +20,9 @@ var inline_src = (<><![CDATA[
 
     $(function(){
 		// add the export button
-         $(".pageheaderlinks").prepend('<a href="#" id="export_btn" class="submenulinktext2"> EXPORT TO CALENDAR </a> &nbsp;');
-		
+		if($(".datadisplaytable[summary='This table lists the scheduled meeting times and assigned instructors for this class..']").length > 0)
+			$(".pageheaderlinks").prepend('<a href="#" id="export_btn" class="submenulinktext2"> EXPORT TO CALENDAR </a> &nbsp;');
+
 		/**
 		 *	This class is used to create events in the iCalendar spec
 		 */
@@ -123,20 +124,22 @@ var inline_src = (<><![CDATA[
 
 	        let class_table = [];
 			let table_index = 0;
-			
+
 			// find all classes in the table
 			$(".datadisplaytable[summary='This table lists the scheduled meeting times and assigned instructors for this class..']").each(function(i){
+				// get the class name
+				let summary = $(this).prev().find("caption").text();
 				
 				// find the cells containing the class info
 				let cells = $(this).find("tr").eq(1).find("td:lt(5):gt(0)");
-			
+
 				// make a new event for each day of week
 				let dow = $(cells.get(1)).text();
 
 				for(let x = 0; x < dow.length; ++x){
-			
+
 					class_table[table_index++] = new Cal_Event($(cells.get(0)).text().split("-")[0], $(cells.get(0)).text().split("-")[1], 
-								$(cells.get(3)).text().split("-")[0], $(cells.get(3)).text().split("-")[1], dow[x], "Class", 
+								$(cells.get(3)).text().split("-")[0], $(cells.get(3)).text().split("-")[1], dow[x], summary, 
 								$(cells.get(2)).text(), "");		
 				}
 				
@@ -150,15 +153,15 @@ var inline_src = (<><![CDATA[
 			});
 
 			// add the calendar heading
-			let calendar = `BEGIN:VCALENDAR\n
-PRODID:-//Jake Brisk//BU Calendar//EN\n
-VERSION:2.0\n
-CALSCALE:GREGORIAN\n
-METHOD:PUBLISH\n
-X-WR-CALNAME:bu-schedule@binghamton.edu\n
-X-WR-TIMEZONE:America/New_York\n
-${event_list}
-END:VCALENDAR\n`;
+			let calendar = "BEGIN:VCALENDAR\n" +
+							"PRODID:-//Jake Brisk//BU Calendar//EN\n" +
+							"VERSION:2.0\n" +
+							"CALSCALE:GREGORIAN\n" +
+							"METHOD:PUBLISH\n" +
+							"X-WR-CALNAME:bu-schedule@binghamton.edu\n" +
+							"X-WR-TIMEZONE:America/New_York\n" +
+							event_list +
+							"END:VCALENDAR\n";
 			
 			// prompt to download the file
 			let element = document.createElement('a');
