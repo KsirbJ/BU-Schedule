@@ -29,14 +29,14 @@ var inline_src = (<><![CDATA[
 		class Cal_Event {
 			// constructor
 			constructor(tbegin, tend, dbegin, dend, dow, sum, loc, desc){
-				this.tbegin = tbegin;
-				this.tend = tend;
-				this.dbegin = dbegin;
-				this.dend = dend;
-				this.dow = dow;
-				this.sum = sum;
-				this.loc = loc;
-				this.desc = desc;	
+				this.tbegin = tbegin; 	// time the event begins
+				this.tend = tend;		// time the event ends
+				this.dbegin = dbegin;	// date the event begins
+				this.dend = dend;		// date it ends
+				this.dow = dow;			// Single letter day of week, ex. M
+				this.sum = sum;			// A summary for this event - This shows as the event name in calendars
+				this.loc = loc;			// A location for the event
+				this.desc = desc;		// A short description of the event
 			}	
 
 			/**
@@ -51,7 +51,7 @@ var inline_src = (<><![CDATA[
 				time = time.trim();
 
 				let t = moment(time, ['h:mm A']).day(weekday);
-				return t.format("YYYYMMDD[T]HHmmss");
+				return t.format("[T]HHmmss");
 			}
 
 			/** 
@@ -63,20 +63,33 @@ var inline_src = (<><![CDATA[
 			letter_to_weekday(letter){
 				switch(letter){
 					case 'M':
-						return "Monday";
+						return 1;
 					case 'T':
-						return "Tuesday";
+						return 2;
 					case 'W':
-						return "Wednesday";
+						return 3;
 					case 'R':
-						return "Thursday";
+						return 4;
 					case 'F':
-						return "Friday";
+						return 5;
 					case 'S':
-						return "Saturday";
+						return 6;
 					default:
 						return "Not a day";
 				}
+			}
+
+			/**
+			 *	Get the first day of week after the event begin date
+			 *	
+			 *	@return {Date}
+			 */
+			next_weekday(){
+				let d = new Date(this.dbegin);
+				let weekday = this.letter_to_weekday(this.dow);
+				let days_to_add = weekday - d.getDate() < 0 ? (7 - d.getDay()) + weekday : weekday - d.getDay();
+				d.setDate(d.getDate() + days_to_add);
+				return d;
 			}
 
 			/**
@@ -86,20 +99,20 @@ var inline_src = (<><![CDATA[
 			 */
 			to_ics_event(){
 				let event = (`BEGIN:VEVENT\n
-							UID:${moment().format("YYYYMMDD[T]HHmmss")}-${this.get_uid()}@binghamton.edu\n
-							DTSTAMP:${moment().format("YYYYMMDD[T]HHmmss")}\n
-							DTSTART:${this.time_to_stamp(this.letter_to_weekday(this.dow), this.tbegin)}\n
-							DTEND:${this.time_to_stamp(this.letter_to_weekday(this.dow), this.tend)}\n
-							SUMMARY:${this.sum}\n
-							LOCATION:${this.loc}\n
-							RRULE:FREQ=WEEKLY;UNTIL=${moment(new Date(this.dend)).format("YYYYMMDD")}T000000\n
-							TRANSP:OPAQUE\n
-							BEGIN:VALARM\n
-							ACTION:DISPLAY\n
-							DESCRIPTION:This is an event reminder\n
-							TRIGGER:-P0DT0H30M0S\n
-							END:VALARM\n
-							END:VEVENT\n`).replace(/^							/gm, '');
+UID:${moment().format("YYYYMMDD[T]HHmmss")}-${this.get_uid()}@binghamton.edu\n
+DTSTAMP:${moment().format("YYYYMMDD[T]HHmmss")}\n
+DTSTART:${moment(this.next_weekday()).format("YYYYMMDD")}${this.time_to_stamp(this.letter_to_weekday(this.dow), this.tbegin)}\n
+DTEND:${moment(this.next_weekday()).format("YYYYMMDD")}${this.time_to_stamp(this.letter_to_weekday(this.dow), this.tend)}\n
+SUMMARY:${this.sum}\n
+LOCATION:${this.loc}\n
+RRULE:FREQ=WEEKLY;UNTIL=${moment(new Date(this.dend)).format("YYYYMMDD")}T000000\n
+TRANSP:OPAQUE\n
+BEGIN:VALARM\n
+ACTION:DISPLAY\n
+DESCRIPTION:This is a class reminder\n
+TRIGGER:-P0DT0H30M0S\n
+END:VALARM\n
+END:VEVENT\n`);
 				return event;
 			}
 			/**
@@ -115,12 +128,12 @@ var inline_src = (<><![CDATA[
 			    return (S4()+S4()+S4()+S4()+S4()+S4()+S4()+S4());
 			}
 		}
-        
-        /** 
-         *	Main function, extracts the class info from the page and prompts 
-         *	the user to download a .ics file containing the class times as events
-         */
-        function main(){
+	    
+	    /** 
+	     *	Main function, extracts the class info from the page and prompts 
+	     *	the user to download a .ics file containing the class times as events
+	     */
+	    function main(){
 
 	        let class_table = [];
 			let table_index = 0;
@@ -174,12 +187,16 @@ var inline_src = (<><![CDATA[
 			element.click();
 
 			document.body.removeChild(element);
+
 		}
 
-		//get_file();
 
 		$(document).on('click', '#export_btn', (e) => {
-			main();
+			if($('.pldefault').text().indexOf("You are not currently registered") === -1)
+				main();
+			else
+				alert("You don't have any registered classes for the selected semester");
+
 			e.preventDefault();
 			e.stopPropagation();
 		});
